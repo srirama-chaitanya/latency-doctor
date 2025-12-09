@@ -15,14 +15,14 @@ const init = () => {
         // Parse the connection string
         const url = new URL(process.env.DATABASE_URL);
 
-        // Manual DNS Resolution: Force IPv4
-        dns.resolve4(url.hostname, (err, addresses) => {
+        // Manual DNS Resolution: Force IPv4 using OS resolver (dns.lookup)
+        dns.lookup(url.hostname, { family: 4 }, (err, address) => {
             if (err) {
-                console.error('[DB] DNS Resolution Failed:', err);
+                console.error('[DB] DNS Lookup Failed:', err);
                 return; // Let it fail naturally
             }
 
-            const ipv4 = addresses[0];
+            const ipv4 = address;
             console.log(`[DB] Resolved ${url.hostname} to ${ipv4}`);
 
             // Reconstruct URL with IPv4
@@ -32,19 +32,19 @@ const init = () => {
                 connectionString: url.toString(),
                 ssl: { rejectUnauthorized: false }
             });
-            console.log('[DB] Using PostgreSQL (IPv4 Forced)');
+            console.log('[DB] Using PostgreSQL (IPv4 Forced via dns.lookup)');
 
             // Create Table (Postgres syntax)
             dbClient.query(`
-                CREATE TABLE IF NOT EXISTS requests(
-    id SERIAL PRIMARY KEY,
-    route TEXT,
-    method TEXT,
-    "totalMs" REAL,
-    steps TEXT,
-    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-)
-    `).catch(err => console.error('PG Init Error:', err));
+                CREATE TABLE IF NOT EXISTS requests (
+                    id SERIAL PRIMARY KEY,
+                    route TEXT,
+                    method TEXT,
+                    "totalMs" REAL,
+                    steps TEXT,
+                    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            `).catch(err => console.error('PG Init Error:', err));
         });
 
 
@@ -73,6 +73,10 @@ const insertRequest = (route, method, totalMs, steps, callback) => {
     const jsonSteps = JSON.stringify(steps);
 
     if (mode === 'postgres') {
+        if (!dbClient) {
+            console.error('[DB] Request received before DB connection ready');
+            return callback(new Error('Database connection initializing...'));
+        }
         const query = 'INSERT INTO requests (route, method, "totalMs", steps) VALUES ($1, $2, $3, $4) RETURNING id';
         dbClient.query(query, [route, method, totalMs, jsonSteps], (err, res) => {
             if (err) return callback(err);
@@ -90,6 +94,7 @@ const insertRequest = (route, method, totalMs, steps, callback) => {
 // Unified Select Method
 const getRequests = (limit = 50, callback) => {
     if (mode === 'postgres') {
+        if (!dbClient) return callback(new Error('Database connection initializing...'));
         dbClient.query('SELECT * FROM requests ORDER BY id DESC LIMIT $1', [limit], (err, res) => {
             if (err) return callback(err);
             // Postgres returns column names exactly as creates. steps is string.
