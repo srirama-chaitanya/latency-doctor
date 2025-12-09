@@ -14,6 +14,27 @@ app.use(bodyParser.json());
 // Initialize DB (Auto-detects PG vs SQLite)
 db.init();
 
+// DOGFOODING: Profile our own API! 🐶
+const { profilerMiddleware, Timeline } = require('latency-doctor-sriram');
+
+// Recursion Guard: Don't profile the profiler's own ingestion calls
+const profiler = profilerMiddleware({
+    // In Production: defaults to itself (latency-doctor.onrender.com)
+    // In Local: defaults to localhost:4000
+    // We can rely on defaults or Env Vars here. 
+    reportingUrl: 'https://latency-doctor.onrender.com/api/ingest', // Point to Cloud
+    apiKey: 'dogfood-key'
+});
+
+const safeProfiler = (req, res, next) => {
+    if (req.path === '/api/ingest') {
+        return next(); // Skip ingestion to prevent infinite loop
+    }
+    profiler(req, res, next);
+};
+
+app.use(safeProfiler);
+
 // Routes
 
 // 1. Ingest Endpoint (Called by SDK)
@@ -37,7 +58,9 @@ app.post('/api/ingest', (req, res) => {
 
 // 2. Retrieval Endpoint (Called by Frontend)
 app.get('/api/requests', (req, res) => {
+    Timeline.start('fetch_dashboard_data');
     db.getRequests(50, (err, results) => {
+        Timeline.end('fetch_dashboard_data');
         if (err) {
             console.error(err);
             return res.status(500).json({ error: 'Database error' });
