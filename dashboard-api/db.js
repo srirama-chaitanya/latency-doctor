@@ -1,4 +1,4 @@
-```javascript
+
 const sqlite3 = require('sqlite3').verbose();
 const { Pool } = require('pg');
 const dns = require('dns');
@@ -11,10 +11,10 @@ const init = () => {
     if (process.env.DATABASE_URL) {
         // PRODUCTION: Use PostgreSQL
         mode = 'postgres';
-        
+
         // Parse the connection string
         const url = new URL(process.env.DATABASE_URL);
-        
+
         // Manual DNS Resolution: Force IPv4
         dns.resolve4(url.hostname, (err, addresses) => {
             if (err) {
@@ -23,14 +23,14 @@ const init = () => {
             }
 
             const ipv4 = addresses[0];
-            console.log(`[DB] Resolved ${ url.hostname } to ${ ipv4 } `);
-            
+            console.log(`[DB] Resolved ${url.hostname} to ${ipv4}`);
+
             // Reconstruct URL with IPv4
             url.hostname = ipv4;
-            
+
             dbClient = new Pool({
                 connectionString: url.toString(),
-                ssl: { rejectUnauthorized: false } 
+                ssl: { rejectUnauthorized: false }
             });
             console.log('[DB] Using PostgreSQL (IPv4 Forced)');
 
