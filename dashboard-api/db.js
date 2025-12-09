@@ -47,17 +47,7 @@ const init = () => {
     `).catch(err => console.error('PG Init Error:', err));
         });
 
-        // Create Table (Postgres syntax)
-        dbClient.query(`
-            CREATE TABLE IF NOT EXISTS requests(
-        id SERIAL PRIMARY KEY,
-        route TEXT,
-        method TEXT,
-        "totalMs" REAL,
-        steps TEXT,
-        timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )
-        `).catch(err => console.error('PG Init Error:', err));
+
 
     } else {
         // LOCAL: Use SQLite
