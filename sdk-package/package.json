@@ -1,0 +1,25 @@
+{
+    "name": "latency-doctor-sriram",
+    "version": "1.0.0",
+    "description": "A high-precision middleware for profiling API latency.",
+    "main": "index.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "keywords": [
+        "profiler",
+        "latency",
+        "timeline",
+        "performance",
+        "middleware",
+        "express"
+    ],
+    "author": "Latency Doctor Team",
+    "license": "MIT",
+    "dependencies": {
+        "async_hooks": "^1.0.0"
+    },
+    "peerDependencies": {
+        "express": "^4.0.0"
+    }
+}
