@@ -1,5 +1,7 @@
+```javascript
 const sqlite3 = require('sqlite3').verbose();
 const { Pool } = require('pg');
+const dns = require('dns');
 
 let dbClient = null;
 let mode = 'sqlite';
@@ -9,22 +11,52 @@ const init = () => {
     if (process.env.DATABASE_URL) {
         // PRODUCTION: Use PostgreSQL
         mode = 'postgres';
-        dbClient = new Pool({
-            connectionString: process.env.DATABASE_URL,
-            ssl: { rejectUnauthorized: false } // Required for most cloud DBs
+        
+        // Parse the connection string
+        const url = new URL(process.env.DATABASE_URL);
+        
+        // Manual DNS Resolution: Force IPv4
+        dns.resolve4(url.hostname, (err, addresses) => {
+            if (err) {
+                console.error('[DB] DNS Resolution Failed:', err);
+                return; // Let it fail naturally
+            }
+
+            const ipv4 = addresses[0];
+            console.log(`[DB] Resolved ${ url.hostname } to ${ ipv4 } `);
+            
+            // Reconstruct URL with IPv4
+            url.hostname = ipv4;
+            
+            dbClient = new Pool({
+                connectionString: url.toString(),
+                ssl: { rejectUnauthorized: false } 
+            });
+            console.log('[DB] Using PostgreSQL (IPv4 Forced)');
+
+            // Create Table (Postgres syntax)
+            dbClient.query(`
+                CREATE TABLE IF NOT EXISTS requests(
+    id SERIAL PRIMARY KEY,
+    route TEXT,
+    method TEXT,
+    "totalMs" REAL,
+    steps TEXT,
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+)
+    `).catch(err => console.error('PG Init Error:', err));
         });
-        console.log('[DB] Using PostgreSQL');
 
         // Create Table (Postgres syntax)
         dbClient.query(`
-            CREATE TABLE IF NOT EXISTS requests (
-                id SERIAL PRIMARY KEY,
-                route TEXT,
-                method TEXT,
-                "totalMs" REAL,
-                steps TEXT,
-                timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
+            CREATE TABLE IF NOT EXISTS requests(
+        id SERIAL PRIMARY KEY,
+        route TEXT,
+        method TEXT,
+        "totalMs" REAL,
+        steps TEXT,
+        timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
         `).catch(err => console.error('PG Init Error:', err));
 
     } else {
@@ -34,14 +66,14 @@ const init = () => {
         console.log('[DB] Using SQLite (Local)');
 
         dbClient.serialize(() => {
-            dbClient.run(`CREATE TABLE IF NOT EXISTS requests (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                route TEXT,
-                method TEXT,
-                totalMs REAL,
-                steps TEXT,
-                timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
-            )`);
+            dbClient.run(`CREATE TABLE IF NOT EXISTS requests(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        route TEXT,
+        method TEXT,
+        totalMs REAL,
+        steps TEXT,
+        timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+    )`);
         });
     }
 };
