@@ -1,6 +1,6 @@
 {
     "name": "latency-doctor-sriram",
-    "version": "1.0.1",
+    "version": "1.0.3",
     "description": "A high-precision middleware for profiling API latency.",
     "main": "index.js",
     "scripts": {
