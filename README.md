@@ -4,17 +4,18 @@
 
 ## 🚀 Features
 
+-   **Zero-Config Auto-Instrumentation (V2)**: Automatically trace native `http` and `pg` queries with no code changes.
 -   **Granular Profiling**: Break down latency into meaningful segments (DB, External, Logic).
 -   **Low Overhead SDK**: Non-intrusive `AsyncLocalStorage`-based middleware for Node.js/Express.
 -   **Real-time Dashboard**: Visualize request timelines to identify bottlenecks instantly.
--   **Fire-and-Forget**: Asynchronous trace reporting ensures your API performance isn't impacted.
+-   **Local-First Architecture**: 100% private, zero-configuration SQLite backend.
 
 ## 🏗️ Architecture
 
 The project consists of three main components working together:
 
 1.  **SDK (`latency-doctor-sriram`)**: A Node.js middleware that you install in your API. It captures start/end times of operations and sends them to the Dashboard API.
-2.  **Dashboard API**: The ingestion server that receives traces from the SDK and stores them (SQLite/PostgreSQL).
+2.  **Dashboard API**: The local-first ingestion server that receives traces from the SDK and stores them securely in an embedded SQLite database.
 3.  **Frontend**: A React-based dashboard to view and analyze the captured traces.
 
 ## 🛠️ Getting Started
@@ -59,7 +60,8 @@ npm install latency-doctor-sriram
 -   `dashboard-api/`: Backend server for data ingestion and reporting.
 -   `frontend/`: React application for visualizing traces.
 -   `example-real-world-app/`: A demo application using the SDK for testing.
--   `showcase-app/`: Another simple example usage.
+-   `showcase-app/`: A simple example usage demonstrating manual (V1) tracing.
+-   `showcase-app-v2/`: An advanced integration demonstrating fully automated (V2) tracing.
 
 ## 🤝 Contributing
 
