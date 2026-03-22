@@ -9,7 +9,27 @@ It breaks down your request latency into granular steps (Database, External API,
 npm install latency-doctor-sriram
 ```
 
-## Quick Start
+## 🚀 V2: Zero-Config Auto-Instrumentation (Recommended)
+
+You no longer need to manually write `Timeline.start()` and `Timeline.end()`. The SDK can automatically profile all outgoing HTTP requests and PostgreSQL queries.
+
+```javascript
+const { autoInstrumentHttp, autoInstrumentPg, profilerMiddleware } = require('latency-doctor-sriram');
+
+// 1. Initialize Auto-Patchers BEFORE requiring routers or connecting to DBs
+autoInstrumentHttp();
+autoInstrumentPg(require('pg')); 
+
+const express = require('express');
+const app = express();
+
+// 2. Setup Middleware
+app.use(profilerMiddleware({
+    reportingUrl: 'http://localhost:4000/api/ingest',
+}));
+```
+
+## Manual Usage (V1)
 
 ### 1. Setup Middleware
 Add this to the top of your `server.js` (before defining routes):

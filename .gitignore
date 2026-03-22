@@ -26,3 +26,10 @@ Thumbs.db
 # IDEs
 .vscode
 .idea
+
+# Personal Study Files
+architecture.md
+concepts.md
+tradeoffs.md
+challenges.md
+deep_dive_interview_prep.md

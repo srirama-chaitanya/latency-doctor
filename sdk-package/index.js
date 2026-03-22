@@ -150,7 +150,12 @@ const profilerMiddleware = (options = {}) => {
     };
 };
 
+const { initializeHttpAutoPatch } = require('./auto-http');
+const { patchPgDriver } = require('./auto-pg');
+
 module.exports = {
     Timeline,
-    profilerMiddleware
+    profilerMiddleware,
+    autoInstrumentHttp: () => initializeHttpAutoPatch(Timeline),
+    autoInstrumentPg: (pgModule) => patchPgDriver(pgModule, Timeline)
 };
